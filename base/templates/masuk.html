@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="{% static 'images/logo.ico' %}" type="image/x-icon">
+    <title>Login Form</title>
+  </head>
+  <body>
+    <div class="min-h-screen flex">
+      <div
+        class="hidden md:flex w-1/1 bg-gradient-to-br from-blue-600 to-blue-900 p-12 flex-col"
+      >
+        <div class="flex gap-4">
+          <a href={% url 'beranda'%}><img src="{%static 'images/logo.png' %}" alt="" class="w-auto h-12" />
+          <h2 class="text-white font-medium text-xl">
+            SP4N-LAPOR <br />Nusa Tenggara Barat
+          </h2></a>
+        </div>
+        <div class="my-auto">
+          <h1 class="text-white text-6xl font-bold">Masuk Ke akun Anda</h1>
+          <p class="text-white font-medium text-left mt-3">
+            Masuk sekarang untuk menyampaikan aspirasi dan pengaduan Anda secara
+            langsung kepada Pemerintah Provinsi Nusa Tenggara Barat. Partisipasi
+            Anda adalah kunci perbaikan layanan publik kami
+          </p>
+        </div>
+      </div>
+      <div class="w-full md:w1/2 justify-center flex items-center p-6">
+        <div class="relative w-full max-w-md">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-900 transform -skew-y-6 sm:skew-y-0 sm:rotate-6 rounded-3xl shadow-lg">
+            </div>
+          <div
+            class="relative bg-white p-8 rounded-3xl shadow-lg justify-center items-center text-center">
+            <h1 class="text-2xl justify-center font-bold">Masuk</h1>
+           {% if messages %}
+    <div class="mb-4">
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            <div class="p-3 text-sm rounded-lg bg-green-100 text-green-700 text-left font-medium">
+                {{ message }}
+            </div>
+        {% else %}
+            <div class="p-3 text-sm rounded-lg bg-red-100 text-red-700 text-left font-medium">
+                {{ message }}
+            </div>
+        {% endif %}
+    {% endfor %}
+    </div>
+{% endif %}
+            {% if form.errors %}
+                 <div class="bg-red-100 text-red-700 p-3 text-sm rounded-lg mb-4 text-left">
+                 Terjadi kesalahan pada formulir. Silakan periksa kembali.
+             </div>
+             {%else%}    
+            {% endif %}
+           <form method="POST" action="{% url 'masuk' %}" class="space-y-4 mt-4">
+    {% csrf_token %}
+    
+    <input type="text" name="username" placeholder="Username" required 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+    
+    <input type="password" name="password" placeholder="Password" required 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"> 
+    
+    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-full hover:bg-blue-700 transition-colors mt-5 flex justify-center items-center shadow-lg font-bold">
+        Masuk
+    </button>
+</form>
+              <p class="mt-4 text-sm">
+                Belum punya akun?
+              <a href={% url 'register' %} class="text-blue-600 hover:underline font-semibold"
+                >Daftar di sini</a
+              >
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

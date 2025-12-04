@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="{% static 'images/logo.ico' %}" type="image/x-icon">
+    <title>Login Form</title>
+  </head>
+  <body>
+    <div class="min-h-screen flex">
+      <div
+        class="hidden md:flex w-1/1 bg-gradient-to-br from-blue-600 to-blue-900 p-12 flex-col"
+      >
+        <div class="flex gap-4">
+           <a href={% url 'beranda'%}><img src="{%static 'images/logo.png' %}" alt="" class="w-auto h-12" />
+          <h2 class="text-white font-medium text-xl">
+            SP4N-LAPOR <br />Nusa Tenggara Barat
+          </h2></a>
+        </div>
+        <div class="my-auto">
+          <h1 class="text-white text-6xl font-bold">Buat akun Anda</h1>
+          <p class="text-white font-medium text-left mt-3">
+            Bergabunglah sekarang untuk ikut serta dalam perbaikan layanan publik.
+            Buat akun Anda dalam beberapa langkah mudah!
+          </p>
+        </div>
+      </div>
+      <div class="w-full md:w1/1 justify-center flex items-center p-6">
+        <div class="relative w-full max-w-md">
+          <div
+            class="absolute inset-0 bg-white transform -skew-y-6 sm:skew-y-0 sm:rotate-6 rounded-3xl shadow-lg">
+            </div>
+          <div
+            class="relative bg-gradient-to-r from-blue-900 to-blue-600 p-8 rounded-3xl shadow-lg justify-center items-center text-center">
+            <h1 class="text-2xl justify-center font-bold text-white">Daftar</h1>
+            {% if messages %}
+                 <div class="bg-red-100 text-red-700 p-3 text-sm rounded-lg mb-4 text-left">
+                 Terjadi kesalahan pada formulir. Silakan periksa kembali.
+             </div>
+             {%else%} 
+             {% endif %}
+<form method="POST" action="{% url 'register' %}" class="space-y-4 mt-4">
+    {% csrf_token %}
+
+    <div>
+        <input type="text" name="username" placeholder="Username (Boleh spasi)" required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value="{{ form.username.value|default:'' }}">
+        <p class="text-red-500 text-xs">{{ form.username.errors.0 }}</p>
+    </div>
+
+    <div>
+        <input type="email" name="email" placeholder="Email" required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value="{{ form.email.value|default:'' }}">
+        <p class="text-red-500 text-xs">{{ form.email.errors.0 }}</p>
+    </div>
+
+    <div>
+        <input type="text" name="nik" placeholder="NIK" required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value="{{ form.nik.value|default:'' }}">
+        <p class="text-red-500 text-xs">{{ form.nik.errors.0 }}</p>
+    </div>
+
+    <div>
+        <input type="password" name="password1" placeholder="Password (Min. 8 Karakter)" required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-red-500 text-xs">{{ form.password1.errors.0 }}</p>
+    </div>
+
+    <div>
+        <input type="password" name="password2" placeholder="Ulangi Password" required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-red-500 text-xs">{{ form.password2.errors.0 }}</p>
+        
+        <p class="text-red-500 text-xs">{{ form.non_field_errors.0 }}</p>
+    </div>
+
+    <button type="submit" class="w-full bg-white text-blue-900 py-2 px-4 rounded-full transition-colors mt-4 font-bold hover:bg-gray-100 shadow-md">
+        Daftar
+    </button>
+</form>
+<p class="mt-4 text-sm text-white">
+    Sudah punya akun?
+    <a href="{% url 'masuk' %}" class="text-white hover:underline font-semibold">
+        Masuk di sini
+    </a>
+</p>
+            </div>
+        </div>
+    </div>
+    </div>
+    </body>
+</html>

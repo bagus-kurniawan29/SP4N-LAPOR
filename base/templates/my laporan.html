@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Saya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="{% static 'images/logo.ico' %}" type="image/x-icon">
+</head>
+<body class="bg-gray-50">
+    <header class="items-center justify-center p-4 bg-white shadow-md flex sticky top-0 z-50 ">
+        <nav class="underline-none font-semibold flex items-center gap-16 justify-center">
+            <a href="{% url 'beranda' %}" class="outline-none flex items-start gap-2 text-blue-600 hover:text-blue-800">
+                <svg class="w-6 h-6 fill-current text-gray-700" xmlns="www.w3.org" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M11.03 5.47a.75.75 0 0 1 0 1.06l-4.375 4.375H21a.75.75 0 0 1 0 1.5h-11.375l4.375 4.375a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0z" />
+                </svg>
+            </a>
+            {%if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="hover:text-blue-800">Lihat semua pengaduan</a>
+            {%else%}
+            <a href="{% url 'laporan' %}" class="hover:text-blue-800">Buat Pengaduan</a>
+            {%endif%}
+            <a href="#" class="text-blue-600 font-semibold">Pengaduan saya</a>
+        </nav>
+    </header>
+
+    <div class="flex justify-center items-center mt-16 md:flex md:justify-center md:items-center md:ml-32 md:text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-center">Lihat Semua Laporan Anda</h1>
+    </div>
+
+    <div class="">
+        <div class="justify-center flex items-center bg-white shadow-[0_0_15px_rgba(0,0,0,0.15)] p-6 mt-10 mb-16 mx-4 md:mx-32 rounded-lg mx-auto">
+            <table class="min-w-full border-collapse block md:table">
+                <thead class="block md:table-header-group">
+                    <tr class="border border-gray-300 md:border-none block md:table-row absolute -top-full md:top-auto -left-full md:left-auto md:relative ">
+                        <th class="bg-gray-200 p-2 text-gray-700 font-bold md:border md:border-gray-300 text-left block md:table-cell">Tanggal Pelaporan</th>
+                        <th class="bg-gray-200 p-2 text-gray-700 font-bold md:border md:border-gray-300 text-left block md:table-cell w-1/2">Isi Laporan</th>
+                        <th class="bg-gray-200 p-2 text-gray-700 font-bold md:border md:border-gray-300 text-left block md:table-cell">Status</th>
+                        <th class="bg-gray-200 p-2 text-gray-700 font-bold md:border md:border-gray-300 text-left block md:table-cell">Gambar Bukti</th>
+                    </tr>
+                </thead>
+                <tbody class="block md:table-row-group">
+                    {% for laporan in laporan_list %}
+                    <tr class="bg-white border border-gray-300 md:border-none block md:table-row hover:bg-gray-50 transition duration-150">
+                        
+                        <td class="p-2 md:border md:border-gray-300 text-left block md:table-cell">
+                            <span class="md:hidden font-bold">Tanggal: </span>
+                            {{ laporan.tanggal_pelaporan|date:"d F Y" }}
+                        </td>
+
+                        <td class="p-2 md:border md:border-gray-300 text-left block md:table-cell break-all">
+                            <span class="md:hidden font-bold">Isi: </span>
+                            {{ laporan.isi_laporan }}
+                        </td>
+
+                        <td class="p-2 md:border md:border-gray-300 text-left block md:table-cell font-semibold">
+                            <span class="md:hidden font-bold">Status: </span>
+                            {% if laporan.status == 'menunggu' %}
+                                <span class="text-red-500 bg-red-100 px-2 py-1 rounded-full text-xs">Menunggu</span>
+                            {% elif laporan.status == 'proses' %}
+                                <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs">Dalam Proses</span>
+                            {% else %}
+                                <span class="text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs">Selesai</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-2 md:border md:border-gray-300 text-left block md:table-cell">
+                            <span class="md:hidden font-bold">Bukti: </span>
+                            {% if laporan.gambar_bukti %}
+                                <a href="{{ laporan.gambar_bukti.url }}" target="_blank">
+                                    <img src="{{ laporan.gambar_bukti.url }}" alt="Bukti Laporan" class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:scale-105 transition-transform">
+                                </a>
+                            {% else %}
+                                <span class="text-gray-400 text-sm italic">Tidak ada foto</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="block md:table-row text-center p-4">
+                        <td colspan="4" class="p-8 md:border md:border-gray-300 text-gray-500">
+                            Belum ada laporan pengaduan yang dibuat.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="items-center justify-center flex sticky bottom-0 z-50 ">
+        <a href="{% url 'keluar'%}" class="bg-red-600 p-3 text-white rounded-xl">Log Out</a>
+    </div>
+</body>
+</html>
