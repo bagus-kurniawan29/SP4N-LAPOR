@@ -15,6 +15,7 @@ urlpatterns = [
     path('laporan_saya/', views.laporan_saya, name='laporan_saya'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('update-status/<int:laporan_id>/', views.update_status, name='update_status'),
+    path('laporan/detail/<int:laporan_id>/', views.detail_laporan, name='detail_laporan'),
 ]
 
 if settings.DEBUG:

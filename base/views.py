@@ -1,18 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-
 from django.contrib.auth import authenticate, login, logout 
 from django.contrib.auth.decorators import login_required, user_passes_test 
 from datetime import datetime
 from .forms import UserRegisterForm, LoginForm, PengaduanForm 
-from .models import Pengaduan
+from .models import Pengaduan, ChatLaporan
 
-
+# --- Helper Function ---
 def is_admin(user):
     return user.is_staff or user.is_superuser
 
-
-
+# --- Public Views ---
 def beranda(request):
     stats_data = [
         {'value': '1.568', 'label': 'Laporan Diterima'},
@@ -41,51 +39,26 @@ def beranda(request):
             'color': 'red-600',
         },
     ]
-    steps_data = [
-        {'number': 1, 'title': 'Daftar Akun', 'description': 'Buat akun untuk mulai mengirim laporan.'},
-        {'number': 2, 'title': 'Kirim Laporan', 'description': 'Isi formulir laporan dengan detail yang jelas.'},
-        {'number': 3, 'title': 'Tindak Lanjut', 'description': 'Pantau status laporan Anda secara real-time.'},
-    ]
-    hilmi_pengaduan_data =[
-         {
-            'title': 'Jalan Rusak di Depan Sekolah',
-            'description': 'Jalan di depan SDN 01 rusak parah, membahayakan siswa yang berangkat sekolah.',
-            'image_url': 'https://example.com/images/jalan_rusak.jpg',
-            'status': 'Dalam Proses',
-         },
-        {
-                'title': 'Lampu Jalan Mati',
-                'description': 'Lampu jalan di komplek perumahan kami sering mati, rawan kecelakaan.',
-                'image_url': 'https://example.com/images/lampu_jalan.jpg',
-                'status': 'Selesai',
-        },
-        {
-                'title': 'Sampah Menumpuk di Taman Kota',
-                'description': 'Taman kota tidak terawat, banyak sampah berserakan yang mengganggu kenyamanan warga.',
-                'image_url': 'https://example.com/images/taman_sampah.jpg',
-                'status': 'Menunggu',
-        }
-     ]
-    
+
     context = {
         'current_year': datetime.now().year,
         'stats': stats_data,
         'features': features_data,
-        'hilmi_pengaduan': hilmi_pengaduan_data,
-        'steps': steps_data,
     }
     return render(request, 'index.html', context)
 
-
+# --- Authentication Views ---
 def masuk(request):
     if request.method == 'POST':
         u = request.POST.get('username')
         p = request.POST.get('password')
-
         user = authenticate(request, username=u, password=p)
         
         if user is not None:
             login(request, user) 
+            # Jika admin masuk, arahkan ke dashboard admin, jika user ke halaman lapor
+            if user.is_staff:
+                return redirect('admin_dashboard')
             return redirect('laporan') 
         else:
             messages.error(request, "Username atau password salah!")
@@ -96,18 +69,18 @@ def daftar(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            form.save()
+            messages.success(request, "Akun berhasil dibuat, silakan login.")
             return redirect('masuk')
     else:
         form = UserRegisterForm()
-
     return render(request, 'daftar.html', {'form': form})
-
 
 def keluar(request):
     logout(request)
     return redirect('beranda')
 
+# --- User Views ---
 @login_required
 def laporan(request):
     if request.method == 'POST':
@@ -118,20 +91,52 @@ def laporan(request):
             laporan_obj.save()
             messages.success(request, "Laporan berhasil dikirim!")
             return redirect('laporan_saya') 
-    
-    
     return render(request, 'lapor.html')
 
 @login_required
 def laporan_saya(request):
-    laporan_user = Pengaduan.objects.filter(user=request.user).order_by('-dibuat_pada')
-    
-    context = {
-        'laporan_list': laporan_user,
-    }
-    return render(request, 'my laporan.html', context) 
+    laporan_list = Pengaduan.objects.filter(user=request.user).order_by('-dibuat_pada')
+    return render(request, 'my laporan.html', {'laporan_list': laporan_list})
 
-@user_passes_test(is_admin) 
+# --- Fitur Chat & Detail ---
+@login_required
+def detail_laporan(request, laporan_id):
+    laporan_obj = get_object_or_404(Pengaduan, id=laporan_id)
+    
+    # Keamanan: Hanya pemilik atau Admin yang bisa melihat
+    if not request.user.is_staff and laporan_obj.user != request.user:
+        messages.error(request, "Akses dilarang.")
+        return redirect('laporan_saya')
+
+    chats = laporan_obj.chats.all().order_by('dikirim_pada')
+
+    if request.method == "POST":
+        pesan_teks = request.POST.get('pesan')
+        file_gambar = request.FILES.get('foto')
+
+        if pesan_teks or file_gambar:
+            ChatLaporan.objects.create(
+                pengaduan=laporan_obj,
+                pengirim=request.user,
+                pesan=pesan_teks,
+                file_pendukung=file_gambar
+            )
+
+            # Logika Status Otomatis oleh Admin
+            if request.user.is_staff:
+                if file_gambar:
+                    laporan_obj.status = 'selesai'
+                else:
+                    laporan_obj.status = 'proses'
+                laporan_obj.save()
+
+            messages.success(request, "Pesan terkirim.")
+            return redirect('detail_laporan', laporan_id=laporan_id)
+
+    return render(request, 'detail_laporan.html', {'laporan': laporan_obj, 'chats': chats})
+
+# --- Admin Views ---
+@user_passes_test(is_admin)
 def admin_dashboard(request):
     laporan_list = Pengaduan.objects.all().order_by('-dibuat_pada')
     return render(request, 'admin_dashboard.html', {'laporan_list': laporan_list})
@@ -143,4 +148,5 @@ def update_status(request, laporan_id):
         status_baru = request.POST.get('status')
         laporan_obj.status = status_baru
         laporan_obj.save()
+        messages.success(request, "Status laporan berhasil diperbarui.")
     return redirect('admin_dashboard')

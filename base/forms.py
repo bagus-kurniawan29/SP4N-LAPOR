@@ -23,7 +23,8 @@ class UserRegisterForm(UserCreationForm):
         user.email = self.cleaned_data.get('email')
         if commit:
             user.save()
-        return user 
+        return user
+
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(max_length=150, required=True)
@@ -33,3 +34,4 @@ class PengaduanForm(forms.ModelForm):
     class Meta:
         model = Pengaduan
         fields = ['tanggal_pelaporan', 'isi_laporan', 'gambar_bukti']
+

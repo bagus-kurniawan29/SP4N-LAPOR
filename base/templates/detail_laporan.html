@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Laporan #{{ laporan.id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="{% static 'images/logo.ico' %}" type="image/x-icon">
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-white shadow-sm p-4 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <a href="javascript:history.back()" class="text-blue-600 font-bold">← Kembali</a>
+            <h1 class="text-lg font-bold">Chat Progres #{{ laporan.id }}</h1>
+            <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase 
+                {% if laporan.status == 'menunggu' %}bg-red-100 text-red-600{% elif laporan.status == 'proses' %}bg-yellow-100 text-yellow-600{% else %}bg-green-100 text-green-600{% endif %}">
+                {{ laporan.status }}
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 pb-48">
+        <div class="space-y-4" id="chat-container">
+            {% for chat in chats %}
+                <div class="flex {% if chat.pengirim == request.user %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-[80%] {% if chat.pengirim == request.user %}bg-blue-600 text-white rounded-t-2xl rounded-bl-2xl{% else %}bg-white border rounded-t-2xl rounded-br-2xl{% endif %} p-4 shadow-sm">
+                        <p class="text-[10px] opacity-70 font-bold mb-1 uppercase">{{ chat.pengirim.username }}</p>
+                        <p class="text-sm">{{ chat.pesan }}</p>
+                        {% if chat.file_pendukung %}
+                            <img src="{{ chat.file_pendukung.url }}" class="mt-2 rounded-lg max-h-60">
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if not request.user.is_staff and laporan.status == 'selesai' %}
+        <div id="feedback-section" class="mt-10 bg-white p-6 rounded-2xl border-2 border-green-500 text-center shadow-xl">
+            <h3 class="font-bold text-lg mb-4">Apakah Anda Puas dengan Pelayanan Kami?</h3>
+            <div class="flex justify-center gap-4">
+                <button onclick="sendFeedback('Puas')" class="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700">Puas (Selesai)</button>
+                <button onclick="isiPesan('Saya belum puas karena...')" class="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600">Tidak Puas (Chat Lagi)</button>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl">
+        <div class="max-w-4xl mx-auto">
+            
+            {% if request.user.is_staff %}
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                <button onclick="isiPesan('Halo, terima kasih sudah menghubungi kami. Laporan Anda akan segera kami tinjau.')" 
+                        class="whitespace-nowrap bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-2 rounded-lg shadow-sm">
+                    🟡 Template: Sambutan
+                </button>
+                
+                <button id="btn-selesai" onclick="checkAndComplete()" 
+                        class="whitespace-nowrap bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm opacity-50 cursor-not-allowed" disabled>
+                    🟢 Template: Selesaikan (Wajib Foto)
+                </button>
+            </div>
+            {% endif %}
+
+            <form action="" method="POST" enctype="multipart/form-data" id="chat-form">
+                {% csrf_token %}
+                <div class="flex items-center gap-2 bg-gray-100 rounded-full p-2 px-4 border border-gray-200 focus-within:border-blue-500">
+                    <input type="text" name="pesan" id="input-pesan" placeholder="Ketik pesan..." 
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm" required>
+                    
+                    <label class="cursor-pointer">
+                        <input type="file" name="foto" id="input-foto" class="hidden" onchange="toggleGreenBtn()">
+                        <span id="foto-icon" class="text-xl">📷</span>
+                    </label>
+                    
+                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi isi pesan otomatis
+        function isiPesan(teks) {
+            document.getElementById('input-pesan').value = teks;
+            document.getElementById('input-pesan').focus();
+        }
+
+        // Cek apakah ada file foto untuk aktifkan tombol hijau
+        function toggleGreenBtn() {
+            const file = document.getElementById('input-foto').files[0];
+            const btn = document.getElementById('btn-selesai');
+            const icon = document.getElementById('foto-icon');
+            
+            if (file) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                icon.innerHTML = "✅"; // Tanda foto terpilih
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                icon.innerHTML = "📷";
+            }
+        }
+
+        // Fungsi khusus tombol hijau admin
+        function checkAndComplete() {
+            const file = document.getElementById('input-foto').files[0];
+            if (!file) {
+                alert("Wajib lampirkan FOTO bukti untuk menggunakan template Selesai!");
+                return;
+            }
+            isiPesan("Halo, laporan yang Anda ajukan sudah kami tindak lanjuti dan masalah telah diselesaikan di lapangan. Terima kasih.");
+            // Submit form otomatis setelah isi pesan
+            setTimeout(() => { document.getElementById('chat-form').submit(); }, 500);
+        }
+
+        // Fungsi Feedback User
+        function sendFeedback(tipe) {
+            if (tipe === 'Puas') {
+                alert("Terima kasih! Laporan ini telah resmi ditutup.");
+                window.location.href = "{% url 'laporan_saya' %}";
+            }
+        }
+    </script>
+</body>
+</html>

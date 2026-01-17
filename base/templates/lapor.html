@@ -14,15 +14,23 @@
 </head>
 <body class="bg-gray-50"> 
     <header class="items-center justify-center p-4 bg-white shadow-md flex sticky top-0 z-50 ">
-        <nav class="underline-none font-semibold flex items-center gap-16 justify-center">
-            <a href="{% url 'beranda' %}" class="outline-none flex items-start gap-2 text-blue-600 hover:text-blue-800">
-                <svg class="w-6 h-6 fill-current text-gray-700" xmlns="www.w3.org" viewBox="0 0 24 24">
+        <header class="items-center justify-center p-4 bg-white shadow-md flex sticky top-0 z-50 ">
+    <nav class="underline-none font-semibold flex items-center gap-16 justify-center">
+        <a href="{% url 'beranda' %}" class="outline-none flex items-start gap-2 text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6 fill-current text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M11.03 5.47a.75.75 0 0 1 0 1.06l-4.375 4.375H21a.75.75 0 0 1 0 1.5h-11.375l4.375 4.375a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0z" />
-                </svg>
-            </a>
-            <a href="#" class="text-blue-600 hover:text-blue-800 font-semibold">Buat Pengaduan</a>
-            <a href={% url 'laporan_saya'%}>Pengaduan saya</a>
-        </nav>
+            </svg>
+        </a>
+        
+        {% if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="hover:text-blue-800">Lihat Semua Pengaduan</a>
+        {% else %}
+            <a href="#" class="text-blue-600 font-semibold">Buat Pengaduan</a>
+        {% endif %}
+        
+        <a href="{% url 'laporan_saya' %}" class="hover:text-blue-800">Pengaduan saya</a>
+    </nav>
+</header>
     </header>
     <div class="justify-center items-center mt-16 md:flex md:justify-center md:items-center md:ml-32 md:text-center">
         <h1 class="max-w-5xl md:text-5  xl font-bold text-center md:max-w-none">Halo <span class="text-blue-600 uppercase underline">{{ user.username}}</span> Silahkan Laporkan Keluhan Anda</h1>

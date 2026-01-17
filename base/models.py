@@ -48,3 +48,14 @@ class Pengaduan(models.Model):
 
     def __str__(self):
         return f"Laporan - {self.tanggal_pelaporan} - {self.status}"
+    
+# models.py
+class ChatLaporan(models.Model):
+    pengaduan = models.ForeignKey(Pengaduan, on_delete=models.CASCADE, related_name='chats')
+    pengirim = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pesan = models.TextField()
+    file_pendukung = models.ImageField(upload_to='chat_files/', null=True, blank=True)
+    dikirim_pada = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Chat from {self.pengirim.username} on {self.pengaduan.id}"
