@@ -39,11 +39,17 @@ def beranda(request):
             'color': 'red-600',
         },
     ]
+    steps_data = [
+        {'number': 1, 'title': 'Daftar Akun', 'description': 'Buat akun gratis untuk mulai menggunakan layanan kami.'},
+        {'number': 2, 'title': 'Kirim Laporan', 'description': 'Isi formulir laporan dengan detail lengkap dan kirimkan.'},
+        {'number': 3, 'title': 'Pantau Status', 'description': 'Lacak perkembangan laporan Anda secara real-time.'},
+    ]
 
     context = {
         'current_year': datetime.now().year,
         'stats': stats_data,
         'features': features_data,
+        'steps': steps_data,
     }
     return render(request, 'index.html', context)
 
