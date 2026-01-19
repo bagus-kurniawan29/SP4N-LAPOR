@@ -10,26 +10,54 @@
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <header class="bg-white shadow-sm p-4 sticky top-0 z-50">
+    <header class="bg-white shadow-sm p-4 sticky top-0 z-50 border-b">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <a href="javascript:history.back()" class="text-blue-600 font-bold">← Kembali</a>
+            <a href="javascript:history.back()" class="text-blue-600 font-bold flex items-center gap-1">
+                <span>←</span> Kembali
+            </a>
             <h1 class="text-lg font-bold">Chat Progres #{{ laporan.id }}</h1>
-            <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase 
-                {% if laporan.status == 'menunggu' %}bg-red-100 text-red-600{% elif laporan.status == 'proses' %}bg-yellow-100 text-yellow-600{% else %}bg-green-100 text-green-600{% endif %}">
+            <span id="status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase 
+                {% if laporan.status == 'menunggu' %}bg-red-100 text-red-600
+                {% elif laporan.status == 'proses' %}bg-yellow-100 text-yellow-600
+                {% else %}bg-green-100 text-green-600{% endif %}">
                 {{ laporan.status }}
             </span>
         </div>
     </header>
+
+    <div class="max-w-4xl mx-auto p-4">
+        <div class="bg-white rounded-2xl shadow-sm border p-4 flex flex-col md:flex-row gap-4 items-start border-l-4 border-blue-600">
+            {% if laporan.foto %}
+            <div class="w-full md:w-32 h-32 flex-shrink-0">
+                <a href="{{ laporan.foto.url }}" target="_blank">
+                    <img src="{{ laporan.foto.url }}" class="w-full h-full object-cover rounded-xl border-2 border-gray-100 shadow-sm">
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="flex-1">
+                <p class="text-xs font-bold text-blue-600 uppercase mb-1">Isi Pengaduan:</p>
+                <p class="text-sm text-gray-700 leading-relaxed italic bg-gray-50 p-3 rounded-lg border border-dashed">
+                    "{{ laporan.isi }}"
+                </p>
+                <div class="mt-2 flex items-center justify-between">
+                    <span class="text-[10px] text-gray-400">Oleh: {{ laporan.user.username }} | {{ laporan.tanggal_dibuat|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-4xl mx-auto p-4 pb-48">
         <div class="space-y-4" id="chat-container">
             {% for chat in chats %}
                 <div class="flex {% if chat.pengirim == request.user %}justify-end{% else %}justify-start{% endif %}">
                     <div class="max-w-[80%] {% if chat.pengirim == request.user %}bg-blue-600 text-white rounded-t-2xl rounded-bl-2xl{% else %}bg-white border rounded-t-2xl rounded-br-2xl{% endif %} p-4 shadow-sm">
-                        <p class="text-[10px] opacity-70 font-bold mb-1 uppercase">{{ chat.pengirim.username }}</p>
+                        <p class="text-[10px] opacity-70 font-bold mb-1 uppercase text-left">{{ chat.pengirim.username }}</p>
                         <p class="text-sm">{{ chat.pesan }}</p>
                         {% if chat.file_pendukung %}
-                            <img src="{{ chat.file_pendukung.url }}" class="mt-2 rounded-lg max-h-60">
+                            <a href="{{ chat.file_pendukung.url }}" target="_blank">
+                                <img src="{{ chat.file_pendukung.url }}" class="mt-2 rounded-lg max-h-60 border-2 border-white shadow-md">
+                            </a>
                         {% endif %}
                     </div>
                 </div>
@@ -47,18 +75,18 @@
         {% endif %}
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl">
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl z-40">
         <div class="max-w-4xl mx-auto">
             
             {% if request.user.is_staff %}
-            <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                 <button onclick="isiPesan('Halo, terima kasih sudah menghubungi kami. Laporan Anda akan segera kami tinjau.')" 
-                        class="whitespace-nowrap bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-2 rounded-lg shadow-sm">
+                        class="whitespace-nowrap bg-yellow-400 text-yellow-900 text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm">
                     🟡 Template: Sambutan
                 </button>
                 
                 <button id="btn-selesai" onclick="checkAndComplete()" 
-                        class="whitespace-nowrap bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm opacity-50 cursor-not-allowed" disabled>
+                        class="whitespace-nowrap bg-green-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm opacity-50 cursor-not-allowed" disabled>
                     🟢 Template: Selesaikan (Wajib Foto)
                 </button>
             </div>
@@ -66,16 +94,16 @@
 
             <form action="" method="POST" enctype="multipart/form-data" id="chat-form">
                 {% csrf_token %}
-                <div class="flex items-center gap-2 bg-gray-100 rounded-full p-2 px-4 border border-gray-200 focus-within:border-blue-500">
+                <div class="flex items-center gap-2 bg-gray-100 rounded-full p-2 px-4 border border-gray-200 focus-within:border-blue-500 transition-all shadow-inner">
                     <input type="text" name="pesan" id="input-pesan" placeholder="Ketik pesan..." 
-                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm" required>
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2" required>
                     
-                    <label class="cursor-pointer">
+                    <label class="cursor-pointer hover:scale-110 transition-transform">
                         <input type="file" name="foto" id="input-foto" class="hidden" onchange="toggleGreenBtn()">
                         <span id="foto-icon" class="text-xl">📷</span>
                     </label>
                     
-                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700">
+                    <button type="submit" class="bg-blue-600 text-white p-2.5 rounded-full hover:bg-blue-700 shadow-md">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     </button>
                 </div>
@@ -115,7 +143,7 @@
                 return;
             }
             isiPesan("Halo, laporan yang Anda ajukan sudah kami tindak lanjuti dan masalah telah diselesaikan di lapangan. Terima kasih.");
-            // Submit form otomatis setelah isi pesan
+            // Submit form otomatis setelah isi pesan agar status berubah ke 'Selesai'
             setTimeout(() => { document.getElementById('chat-form').submit(); }, 500);
         }
 
