@@ -68,8 +68,8 @@
         <div id="feedback-section" class="mt-10 bg-white p-6 rounded-2xl border-2 border-green-500 text-center shadow-xl">
             <h3 class="font-bold text-lg mb-4">Apakah Anda Puas dengan Pelayanan Kami?</h3>
             <div class="flex justify-center gap-4">
-                <button onclick="sendFeedback('Puas')" class="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700">Puas (Selesai)</button>
-                <button onclick="isiPesan('Saya belum puas karena...')" class="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600">Tidak Puas (Chat Lagi)</button>
+                <button onclick="sendFeedback('Puas')" class="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700">Ya, Saya Puas</button>
+                <button onclick="bukaChatLagi()" class="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600">Tidak Puas</button>
             </div>
         </div>
         {% endif %}
@@ -85,7 +85,7 @@
                     🟡 Template: Sambutan
                 </button>
                 
-                <button id="btn-selesai" onclick="checkAndComplete()" 
+                <button id="btn-selesai" onclick="adminSelesaikanLaporan()" 
                         class="whitespace-nowrap bg-green-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm opacity-50 cursor-not-allowed" disabled>
                     🟢 Template: Selesaikan (Wajib Foto)
                 </button>
@@ -94,12 +94,14 @@
 
             <form action="" method="POST" enctype="multipart/form-data" id="chat-form">
                 {% csrf_token %}
+                <input type="hidden" name="status_baru" id="status_baru" value="{{ laporan.status }}">
+                
                 <div class="flex items-center gap-2 bg-gray-100 rounded-full p-2 px-4 border border-gray-200 focus-within:border-blue-500 transition-all shadow-inner">
                     <input type="text" name="pesan" id="input-pesan" placeholder="Ketik pesan..." 
                            class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2" required>
                     
                     <label class="cursor-pointer hover:scale-110 transition-transform">
-                        <input type="file" name="foto" id="input-foto" class="hidden" onchange="toggleGreenBtn()">
+                        <input type="file" name="foto" id="input-foto" class="hidden" onchange="handleFileChange()">
                         <span id="foto-icon" class="text-xl">📷</span>
                     </label>
                     
@@ -112,45 +114,57 @@
     </div>
 
     <script>
-        // Fungsi isi pesan otomatis
+        const isStaff = "{{ request.user.is_staff }}" === "True";
+
         function isiPesan(teks) {
             document.getElementById('input-pesan').value = teks;
             document.getElementById('input-pesan').focus();
         }
 
-        // Cek apakah ada file foto untuk aktifkan tombol hijau
-        function toggleGreenBtn() {
+        // Fungsi saat user/admin memilih file
+        function handleFileChange() {
             const file = document.getElementById('input-foto').files[0];
-            const btn = document.getElementById('btn-selesai');
+            const btnSelesai = document.getElementById('btn-selesai');
             const icon = document.getElementById('foto-icon');
             
             if (file) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                icon.innerHTML = "✅"; // Tanda foto terpilih
+                icon.innerHTML = "✅";
+                // Jika admin, aktifkan tombol "Selesaikan"
+                if (isStaff && btnSelesai) {
+                    btnSelesai.disabled = false;
+                    btnSelesai.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             } else {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
                 icon.innerHTML = "📷";
+                if (isStaff && btnSelesai) {
+                    btnSelesai.disabled = true;
+                    btnSelesai.classList.add('opacity-50', 'cursor-not-allowed');
+                }
             }
         }
 
-        // Fungsi khusus tombol hijau admin
-        function checkAndComplete() {
+        // Fungsi KHUSUS ADMIN untuk menyelesaikan laporan
+        function adminSelesaikanLaporan() {
             const file = document.getElementById('input-foto').files[0];
             if (!file) {
-                alert("Wajib lampirkan FOTO bukti untuk menggunakan template Selesai!");
+                alert("Wajib lampirkan FOTO bukti!");
                 return;
             }
-            isiPesan("Halo, laporan yang Anda ajukan sudah kami tindak lanjuti dan masalah telah diselesaikan di lapangan. Terima kasih.");
-            // Submit form otomatis setelah isi pesan agar status berubah ke 'Selesai'
+            document.getElementById('status_baru').value = "selesai"; // Set status jadi selesai
+            isiPesan("Halo, laporan Anda telah diselesaikan. Silakan konfirmasi kepuasan Anda.");
             setTimeout(() => { document.getElementById('chat-form').submit(); }, 500);
         }
 
-        // Fungsi Feedback User
+        // Fungsi USER jika tidak puas
+        function bukaChatLagi() {
+            document.getElementById('status_baru').value = "proses"; // Kembalikan ke proses
+            isiPesan("Saya belum puas dengan hasilnya karena...");
+            document.getElementById('feedback-section').classList.add('hidden');
+        }
+
         function sendFeedback(tipe) {
             if (tipe === 'Puas') {
-                alert("Terima kasih! Laporan ini telah resmi ditutup.");
+                alert("Terima kasih! Laporan resmi ditutup.");
                 window.location.href = "{% url 'laporan_saya' %}";
             }
         }
